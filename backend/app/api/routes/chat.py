@@ -1,9 +1,24 @@
 from fastapi import APIRouter
+from app.schemas.chat import(
+    ChatRequest,
+    ChatResponse
+)
+from app.services.chat_service import(
+    get_reply
+)
 
 router = APIRouter()
 
-@router.get("/chat")
-def chat():
+@router.post(
+    "/chat",
+    response_model=ChatResponse
+)
+def chat(
+    request: ChatRequest
+):
+    result=get_reply(
+        request.message
+    )
     return{
-        "message": "chat endpoint ready"
+        "response": result
     }
