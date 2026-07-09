@@ -1,5 +1,5 @@
 from fastapi import (APIRouter)
-from app.rag.store import (DOCUMENTS)
+from backend.app.rag.vector_store import (DOCUMENTS)
 
 router = APIRouter()
 

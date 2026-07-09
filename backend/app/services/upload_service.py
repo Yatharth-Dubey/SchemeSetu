@@ -1,7 +1,7 @@
 import os
 from app.rag.loader import (extract_text)
 from app.rag.chunker import (chunk_text)
-from app.rag.store import (DOCUMENTS)
+from backend.app.rag.vector_store import (DOCUMENTS)
 
 UPLOAD_DIR="uploads"
 os.makedirs(
