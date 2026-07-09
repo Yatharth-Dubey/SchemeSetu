@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from app.api.routes.chat import router
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes.upload import (router as upload_router)
+from app.api.routes.document import (router as docs_router)
 
 app = FastAPI(
     title = "SchemeSetu API"
@@ -19,6 +20,7 @@ app.add_middleware(
 
 app.include_router(router, prefix="/api")
 app.include_router(upload_router, prefix="/api")
+app.include_router(docs_router, prefix="/api")
 
 @app.get("/")
 def home():
