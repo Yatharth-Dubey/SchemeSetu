@@ -1,0 +1,18 @@
+{
+    "0": {
+        "chunk_id": "chunk1",
+        "document_id": "doc1",
+        "filename": "test.pdf",
+        "page_number": 1,
+        "text": "PMAY eligibility criteria",
+        "character_count": 25
+    },
+    "1": {
+        "chunk_id": "chunk2",
+        "document_id": "doc1",
+        "filename": "test.pdf",
+        "page_number": 2,
+        "text": "Ayushman Bharat benefits",
+        "character_count": 24
+    }
+}

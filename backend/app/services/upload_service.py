@@ -1,21 +1,21 @@
-import os
-from app.rag.loader import (extract_text)
-from app.rag.chunker import (chunk_text)
-from backend.app.rag.vector_store import (DOCUMENTS)
-
-UPLOAD_DIR="uploads"
-os.makedirs(
-    UPLOAD_DIR,
-    exist_ok=True
-)
+from app.core.config import UPLOAD_DIR
+from app.utils.id_generator import generate_doucment_id
+from app.rag.document_processor import DocumentProcessor
 
 async def save_pdf(file):
-    path=f"{UPLOAD_DIR}/{file.filename}"
+    path=UPLOAD_DIR/file.filename
     content=await file.read()
+
     with open(path, "wb") as f:
         f.write(content)
-    text=extract_text(path)
-    chunks=chunk_text(text)
-    DOCUMENTS[file.filename]=chunks
+
+    document_id= generate_doucment_id()
+    processor = DocumentProcessor(user_id="local_dev")
+
+    processor.process_document(
+        document_id=document_id,
+        filename=file.filename,
+        pdf_path=path
+    )
 
     return path

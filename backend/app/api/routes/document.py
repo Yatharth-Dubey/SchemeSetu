@@ -1,8 +1,8 @@
 from fastapi import (APIRouter)
-from backend.app.rag.vector_store import (DOCUMENTS)
+from app.services.storage_service import save_processed_document
 
 router = APIRouter()
 
-@router.get("/documents")
+@router.get("/processed")
 def docs():
-    return DOCUMENTS
+    return save_processed_document()
