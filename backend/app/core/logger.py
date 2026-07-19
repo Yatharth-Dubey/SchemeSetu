@@ -1,6 +1,5 @@
 import logging
 import sys
-
 LOG_FORMAT = (
     "%(asctime)s | "
     "%(levelname)-8s | "

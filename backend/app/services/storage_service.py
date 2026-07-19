@@ -29,4 +29,4 @@ def save_processed_document(document_id: str, filename: str, chunks: list):
 
     except Exception:
         logger.exception(f"Failed to save processed document: {filename}")
-        raise
+        raise 

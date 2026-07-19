@@ -3,6 +3,8 @@ from app.api.routes.chat import router
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes.upload import (router as upload_router)
 from app.api.routes.document import (router as docs_router)
+from app.exceptions.custom import SchemeSetuException
+from app.exceptions.handlers import (scheme_setu_exception_handler, generic_exception_handler)
 
 app = FastAPI(
     title = "SchemeSetu API"
@@ -21,6 +23,9 @@ app.add_middleware(
 app.include_router(router, prefix="/api")
 app.include_router(upload_router, prefix="/api")
 app.include_router(docs_router, prefix="/api")
+
+app.add_exception_handler(SchemeSetuException, scheme_setu_exception_handler)
+app.add_exception_handler(Exception, generic_exception_handler)
 
 @app.get("/")
 def home():

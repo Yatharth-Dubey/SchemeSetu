@@ -2,6 +2,7 @@ from google import genai
 from app.core.settings import settings
 from app.providers.base import BaseGenerator
 from app.core.logger import logger
+from app.exceptions.custom import LLMGenerationError
 
 class GeminiGenerator(BaseGenerator):
     """GOOGLE GEMINI IMPLEMENTATION."""
@@ -30,6 +31,6 @@ class GeminiGenerator(BaseGenerator):
             logger.info("Gemini generation completed successfully.")
             return response.text
         
-        except Exception as e:
-            logger.exception("Gemini generation failed.")
-            raise RuntimeError(f"Gemini generation failed:{e}")
+        except Exception:
+            logger.exception("Gemini failed")
+            raise LLMGenerationError()
