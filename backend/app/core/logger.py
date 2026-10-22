@@ -8,7 +8,7 @@ LOG_FORMAT = (
 )
 
 logging.basicConfig(
-    level=logging.info,
+    level=logging.INFO,
     format=LOG_FORMAT,
     handlers=[logging.StreamHandler(sys.stdout)]
 )

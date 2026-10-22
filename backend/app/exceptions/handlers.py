@@ -8,8 +8,12 @@ async def scheme_setu_exception_handler(
     request: Request,
     exc: SchemeSetuException,
 ):
-    logger.exception(exc.message)
-
+    logger.warning(
+        "Application error | Status: %s | Code: %s | Path: %s",
+        exc.status_code,
+        exc.error_code,
+        request.url.path,
+    )
     return JSONResponse(
         status_code=exc.status_code,
         content={

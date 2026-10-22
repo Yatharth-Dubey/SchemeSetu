@@ -7,11 +7,11 @@ router = APIRouter()
 
 @router.post("/upload", response_model=APIResponse[UploadResponse])
 async def upload(file: UploadFile = File(...)):
-    path=await save_pdf(file)
+    await save_pdf(file)
     return APIResponse(
         message="File upload successfully.",
         data=UploadResponse(
-            filename=file.filename,
-            path=path
+            filename=file.filename or "uploaded.pdf",
+            # path=str(path)
         )
     )

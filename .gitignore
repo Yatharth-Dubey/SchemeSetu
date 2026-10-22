@@ -1,7 +1,31 @@
-node_modules/
-venv/
-.env
+# Python
 __pycache__/
-dist/
-build/
+*.py[cod]
 .pytest_cache/
+.venv/
+venv/
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Local uploads and generated RAG data
+backend/storage/users/local_dev/uploads/
+backend/storage/users/local_dev/processed/
+backend/storage/users/local_dev/vectors/
+
+# Generated backups
+SchemeSetu_backups/
+backend/storage/users/local_dev/**/delete_backups/
+backend/storage/users/local_dev/**/document_delete_backups/
+backend/storage/users/local_dev/**/cleanup_preview/
+backend/storage/users/local_dev/**/pre_swap_rollback/
+backend/storage/users/local_dev/**/test_pdf_cleanup_preview/
+
+# Frontend dependencies and build
+frontend/node_modules/
+frontend/dist/
+
+# Runtime-generated storage: uploads, processed documents, vectors and backups
+backend/storage/

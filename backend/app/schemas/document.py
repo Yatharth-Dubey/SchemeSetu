@@ -11,3 +11,8 @@ class DocumentChunk(BaseModel):
 class PageData(BaseModel):
     page_number: int
     text: str
+
+class DocumentDeleteResponse(BaseModel):
+    document_id: str
+    removed_chunks: int
+    message: str

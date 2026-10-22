@@ -68,9 +68,12 @@ class DocumentProcessor:
         
         except VectorStoreError:
             raise
-        
-        except Exception as e:
+
+        except DocumentProcessingError:
+            raise
+
+        except Exception:
             logger.exception("Document processing failed.")
             raise DocumentProcessingError(
-                f"Failed to process document '{filename}: {str(e)}"
-            )
+                message="Document processing failed. Please try again."
+            ) from None

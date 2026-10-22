@@ -16,7 +16,7 @@ class RAGPipeline:
         logger.info("RAG pipeline initialized successfully.")
 
     def answer(self, question: str,) -> RAGResponse:
-        logger.info(f"Received question: {question}")
+        logger.info("Received chat question.")
 
         #RETRIEVAL
         logger.info("Retrieving relevant chunks...")
@@ -29,11 +29,22 @@ class RAGPipeline:
                 sources=[],
                 retrieved_chunks=0
             )
-        logger.debug(chunks)
+        # Prefer substantive chunks over short heading-only matches.
+        substantive_chunks = [
+            item for item in chunks
+            if len(item["chunk"].get("text", "").strip()) >= 80
+        ]
+        # Preserve results if every retrieved chunk is short.
+        selected_chunks = substantive_chunks if substantive_chunks else chunks
+        logger.info(
+            "Using %s of %s retrieved chunks for answer generation.",
+            len(selected_chunks),
+            len(chunks),
+        )
 
         #PROMPT
         logger.info("Building prompt...")
-        prompt = self.prompt_builder.build(question, [item["chunk"] for item in chunks])
+        prompt = self.prompt_builder.build(question, [item["chunk"] for item in selected_chunks])
         logger.debug(f"Prompt length: {len(prompt)} charactes")
 
         #LLM
@@ -45,7 +56,7 @@ class RAGPipeline:
         logger.info("Collecting source information...")
         sources = []
         seen = set()
-        for item in chunks:
+        for item in selected_chunks:
             chunk = item["chunk"]
             key = (
                 chunk["filename"],
@@ -65,5 +76,5 @@ class RAGPipeline:
         return RAGResponse(
             answer=response,
             sources=sources,
-            retrieved_chunks=len(chunks)
+            retrieved_chunks=len(selected_chunks)
         )

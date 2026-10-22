@@ -23,7 +23,7 @@ class DocumentProcessingError(SchemeSetuException):
         )
 
 class VectorStoreError(SchemeSetuException):
-    def __init__(self, message="VECTOR_STORE_ERROR"):
+    def __init__(self, message="Vector store operation failed"):
         super().__init__(
             message=message,
             status_code=500,
@@ -31,9 +31,14 @@ class VectorStoreError(SchemeSetuException):
         )
 
 class LLMGenerationError(SchemeSetuException):
-    def __init__(self, message="LLM generation failed"):
+    def __init__(
+        self,
+        message="LLM generation failed",
+        status_code=500,
+        error_code="LLM_GENERATION_ERROR",
+    ):
         super().__init__(
             message=message,
-            status_code=500,
-            error_code="LLM_GENERATION_ERROR",
+            status_code=status_code,
+            error_code=error_code,
         )
