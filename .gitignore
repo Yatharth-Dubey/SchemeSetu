@@ -29,3 +29,6 @@ frontend/dist/
 
 # Runtime-generated storage: uploads, processed documents, vectors and backups
 backend/storage/
+# User-uploaded documents
+backend/uploads/
+frontend/.vite/
