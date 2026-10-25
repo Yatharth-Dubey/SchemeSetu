@@ -19,9 +19,10 @@ class DocumentProcessor:
             -> Vector Store
     """
 
-    def __init__(self):
-        logger.info("Initializing DocumentProcessor...")
-        self.vector_store = VectorStore()
+    def __init__(self, user_id: str):
+        logger.info("Initializing DocumentProcessor for user %s", user_id)
+        self.user_id = user_id
+        self.vector_store = VectorStore(user_id=user_id)
         logger.info("DocumentProcessor initialized successfully.")
 
     def process_document(
@@ -33,6 +34,10 @@ class DocumentProcessor:
         logger.info(f"User ID: {user_id}")
         logger.info(f"Document ID: {document_id}")
         try:
+            if str(user_id) != self.user_id:
+                raise DocumentProcessingError(
+                    message="Document owner does not match processor user."
+                )
             #step1 - Extract text
             logger.info("step 1/4: Extracting text from PDFs...")
             pages = extract_text(pdf_path)

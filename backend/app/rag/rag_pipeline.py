@@ -8,9 +8,9 @@ class RAGPipeline:
     """
         Complete Retrieveal-Augmented Generation pipeline.
     """
-    def __init__(self):
-        logger.info("Initializing RAG pipeline...")
-        self.retriever = Retriever()
+    def __init__(self, user_id: str):
+        logger.info("Initializing RAG pipeline for user %s", user_id)
+        self.retriever = Retriever(user_id=user_id)
         self.prompt_builder = PromptBuilder()
         self.generator = GeminiGenerator()
         logger.info("RAG pipeline initialized successfully.")

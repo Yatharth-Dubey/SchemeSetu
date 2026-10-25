@@ -1,0 +1,86 @@
+
+import json
+
+from app.core.config import get_user_storage_paths
+from app.core.logger import logger
+
+
+def save_processed_document(
+    user_id: str,
+    document_id: str,
+    filename: str,
+    chunks: list,
+):
+    paths = get_user_storage_paths(user_id)
+    processed_dir = paths["processed_dir"]
+
+    logger.info("Saving processed document: %s", filename)
+    logger.info("User ID: %s", user_id)
+    logger.info("Document ID: %s", document_id)
+
+    data = {
+        "user_id": str(user_id),
+        "document_id": document_id,
+        "filename": filename,
+        "chunk_count": len(chunks),
+        "chunks": [chunk.model_dump() for chunk in chunks],
+    }
+
+    processed_dir.mkdir(parents=True, exist_ok=True)
+    output_file = processed_dir / f"{document_id}.json"
+
+    try:
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+
+        logger.info(
+            "Processed document saved: %s",
+            output_file,
+        )
+
+    except Exception:
+        logger.exception(
+            "Failed to save processed document: %s",
+            filename,
+        )
+        raise
+
+
+def list_processed_documents(user_id: str):
+    """Return only the authenticated user's processed documents."""
+    processed_dir = get_user_storage_paths(user_id)["processed_dir"]
+    documents = []
+
+    if not processed_dir.exists():
+        return documents
+
+    for file_path in sorted(processed_dir.glob("*.json")):
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+
+            # Verify ownership even though files are user-scoped.
+            if str(data.get("user_id")) != str(user_id):
+                logger.warning(
+                    "Skipping document with mismatched owner: %s",
+                    file_path.name,
+                )
+                continue
+
+            documents.append({
+                "document_id": data.get("document_id", file_path.stem),
+                "filename": data.get("filename", "Unknown"),
+                "user_id": str(user_id),
+                "chunk_count": data.get(
+                    "chunk_count",
+                    len(data.get("chunks", [])),
+                ),
+            })
+
+        except (json.JSONDecodeError, OSError):
+            logger.exception(
+                "Could not read processed document: %s",
+                file_path,
+            )
+
+    return documents

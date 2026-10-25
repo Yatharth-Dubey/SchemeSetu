@@ -1,17 +1,31 @@
-from fastapi import (APIRouter, UploadFile, File)
-from app.services.upload_service import (save_pdf)
+
+from fastapi import APIRouter, BackgroundTasks, Depends, File, UploadFile
+
+from app.core.auth import get_current_user
+from app.models.user import User
+from app.services.upload_service import save_pdf, process_pdf_background
 from app.schemas.api import APIResponse
 from app.schemas.upload import UploadResponse
 
 router = APIRouter()
 
+
 @router.post("/upload", response_model=APIResponse[UploadResponse])
-async def upload(file: UploadFile = File(...)):
-    await save_pdf(file)
+async def upload(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+):
+    result = await save_pdf(file, user_id=str(current_user.id))
+
+    background_tasks.add_task(
+        process_pdf_background,
+        str(current_user.id),
+        result["document_id"],
+        result["filename"],
+    )
+
     return APIResponse(
-        message="File upload successfully.",
-        data=UploadResponse(
-            filename=file.filename or "uploaded.pdf",
-            # path=str(path)
-        )
+        message="PDF uploaded. Processing has been queued.",
+        data=UploadResponse(**result),
     )

@@ -16,6 +16,29 @@ function formatSources(raw) {
   return out
 }
 
+// --- NEW: Typewriter Component for smooth text reveal ---
+function TypewriterText({ text, speed = 15 }) {
+  const [displayedText, setDisplayedText] = useState('')
+
+  useEffect(() => {
+    if (!text) {
+      setDisplayedText('')
+      return
+    }
+    setDisplayedText('')
+    let i = 0
+    const interval = setInterval(() => {
+      setDisplayedText((prev) => prev + text.charAt(i))
+      i++
+      if (i >= text.length) clearInterval(interval)
+    }, speed)
+
+    return () => clearInterval(interval)
+  }, [text, speed])
+
+  return <span style={{ whiteSpace: 'pre-wrap' }}>{displayedText}</span>
+}
+
 const ChatBox = forwardRef(function ChatBox(
   { messages, isSending, onSend, onRetry, disabled = false },
   ref
@@ -44,7 +67,7 @@ const ChatBox = forwardRef(function ChatBox(
   }, [messages])
 
   function submit() {
-    // if (disabled) return
+    if (disabled) return
     const q = input.trim()
     if (!q || isSending) return
     onSend(q)
@@ -68,10 +91,16 @@ const ChatBox = forwardRef(function ChatBox(
         aria-relevant="additions text"
       >
         {messages.length === 0 && (
-          <div className="empty-state">
-            {disabled
-              ? 'Upload a scheme document first to start asking questions.'
-              : 'Start by asking a question about an uploaded scheme document.'}
+          <div className="empty-state" style={{ padding: 'var(--space-10) var(--space-4)' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--color-accent-soft)', color: 'var(--color-accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 'var(--space-4)' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/>
+              </svg>
+            </div>
+            <h3 style={{ fontSize: 'var(--text-lg)', color: 'var(--color-text)', marginBottom: 'var(--space-1)' }}>How can I help you today?</h3>
+            <p style={{ maxWidth: '300px' }}>
+              Ask me anything about the documents you have uploaded. I will find the answers for you.
+            </p>
           </div>
         )}
 
@@ -101,6 +130,7 @@ const ChatBox = forwardRef(function ChatBox(
                       type="button"
                       className="button button-secondary"
                       onClick={() => onRetry(m.id)}
+                      disabled={disabled || isSending}
                       aria-label="Retry this question"
                     >
                       Retry
@@ -108,13 +138,20 @@ const ChatBox = forwardRef(function ChatBox(
                   )}
                 </div>
               ) : m.pending ? (
-                <div className="loading-state" role="status" aria-live="polite">
+                // --- NEW: Animated Loading Dots ---
+                <div className="loading-dots" role="status" aria-live="polite">
                   <span className="sr-only">Generating answer…</span>
-                  <span aria-hidden="true">Generating answer…</span>
+                  <span aria-hidden="true"></span>
+                  <span aria-hidden="true"></span>
+                  <span aria-hidden="true"></span>
                 </div>
               ) : (
                 <>
-                  <div>{m.text || 'No answer returned.'}</div>
+                  {/* --- NEW: Typewriter Effect --- */}
+                  <div>
+                    <TypewriterText text={m.text || 'No answer returned.'} speed={10} />
+                  </div>
+                  
                   {sources.length > 0 && (
                     <div className="sources" aria-label="Sources">
                       <span className="sources-title">Sources</span>
@@ -169,7 +206,7 @@ const ChatBox = forwardRef(function ChatBox(
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={onKeyDown}
           rows={3}
-          disabled={isSending}
+          disabled={disabled || isSending}
         />
         <div className="composer-row">
           <span className="composer-note">
@@ -180,7 +217,7 @@ const ChatBox = forwardRef(function ChatBox(
             type="button"
             className="button button-primary"
             onClick={submit}
-            disabled={isSending || input.trim() === ''}
+            disabled={disabled || isSending || input.trim() === ''}
             aria-label="Send question"
           >
             {isSending ? 'Sending…' : 'Send'}

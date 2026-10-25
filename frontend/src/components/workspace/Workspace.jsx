@@ -4,33 +4,63 @@ import {
   useImperativeHandle,
   useRef,
   useState,
+  useEffect,
 } from 'react'
 import UploadBox from '../upload/UploadBox'
 import ChatBox from '../chat/ChatBox'
 
 const Workspace = forwardRef(function Workspace(
-  { messages, isSending, onSend, onRetry, onDocumentUploaded, documentsCount },
+  { messages, isSending, onSend, onRetry, onDocumentUploaded, documents = [] },
   ref
 ) {
   const [activeTab, setActiveTab] = useState('upload')
-  const hasAutoSwitchedRef = useRef(false)
+  // Keep track of whether the user manually changed tabs
+  const [userInteracted, setUserInteracted] = useState(false)
+  
   const chatRef = useRef(null)
+  
+  // Track the most recently uploaded doc ID to know when to auto-switch
+  const lastUploadedIdRef = useRef(null)
+
+  const completedCount = documents.filter((d) => d.status === 'completed').length
+
   const handleUploadSuccess = useCallback(
     (doc) => {
+      if (!doc?.document_id) return
+      lastUploadedIdRef.current = doc.document_id
+      setUserInteracted(false) // Reset user interaction since they just uploaded
       onDocumentUploaded?.(doc)
-      if (!hasAutoSwitchedRef.current) {
-        hasAutoSwitchedRef.current = true
-        setActiveTab('chat')
-      }
     },
     [onDocumentUploaded]
   )
+
+  // Auto-switch logic
+  useEffect(() => {
+    // Only switch if we have a pending uploaded doc, the user hasn't interacted, 
+    // and that doc is now completed.
+    if (lastUploadedIdRef.current && !userInteracted) {
+      const targetDoc = documents.find((d) => d.document_id === lastUploadedIdRef.current)
+      
+      if (targetDoc?.status === 'completed') {
+        setActiveTab('chat')
+        lastUploadedIdRef.current = null // Clear so we don't switch again for this doc
+      } else if (targetDoc?.status === 'failed') {
+        lastUploadedIdRef.current = null // Clear so we don't keep checking a failed doc
+      }
+    }
+  }, [documents, userInteracted])
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab)
+    setUserInteracted(true)
+  }
 
   useImperativeHandle(
     ref,
     () => ({
       focusComposerWithPrompt(prompt) {
         setActiveTab('chat')
+        setUserInteracted(true) // This is a manual interaction
         requestAnimationFrame(() => {
           chatRef.current?.setQuestion(prompt)
         })
@@ -49,7 +79,7 @@ const Workspace = forwardRef(function Workspace(
           aria-selected={activeTab === 'upload'}
           aria-controls="panel-upload"
           className={`tab${activeTab === 'upload' ? ' is-active' : ''}`}
-          onClick={() => setActiveTab('upload')}
+          onClick={() => handleTabChange('upload')}
         >
           Upload
         </button>
@@ -60,27 +90,29 @@ const Workspace = forwardRef(function Workspace(
           aria-selected={activeTab === 'chat'}
           aria-controls="panel-chat"
           className={`tab${activeTab === 'chat' ? ' is-active' : ''}`}
-          onClick={() => setActiveTab('chat')}
+          onClick={() => handleTabChange('chat')}
         >
           Chat
-          {documentsCount > 0 && (
+          {completedCount > 0 && (
             <span
               className="tab-badge"
-              aria-label={`${documentsCount} document${documentsCount === 1 ? '' : 's'} uploaded`}
+              aria-label={`${completedCount} document${completedCount === 1 ? '' : 's'} ready`}
             >
-              {documentsCount}
+              {completedCount}
             </span>
           )}
         </button>
       </div>
+
       <div
         id="panel-upload"
         role="tabpanel"
         aria-labelledby="tab-upload"
         hidden={activeTab !== 'upload'}
       >
-        <UploadBox onUploadSuccess={handleUploadSuccess} />
+        <UploadBox onUploadSuccess={handleUploadSuccess} documents={documents} />
       </div>
+
       <div
         id="panel-chat"
         role="tabpanel"
@@ -93,7 +125,7 @@ const Workspace = forwardRef(function Workspace(
           isSending={isSending}
           onSend={onSend}
           onRetry={onRetry}
-          disabled={documentsCount === 0}
+          disabled={completedCount === 0}
         />
       </div>
     </div>

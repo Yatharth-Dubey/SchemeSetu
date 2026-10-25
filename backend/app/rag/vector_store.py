@@ -1,20 +1,28 @@
 ﻿import faiss
 import json
 import numpy as np
-from app.core.config import VECTOR_DIR
 from app.rag.embedding import generate_embeddings
 from app.core.logger import logger
 from app.exceptions.custom import VectorStoreError
+from app.core.config import get_user_storage_paths
 
 class VectorStore:
-    def __init__(self):
-        logger.info("Initializing VectorStore...")
-        self.index_file = VECTOR_DIR/"faiss.index"
-        self.metadata_file = VECTOR_DIR/"metadata.json"
+    def __init__(self, user_id: str):
+        logger.info("Initializing VectorStore for user %s", user_id)
+
+        paths = get_user_storage_paths(user_id)
+        self.vector_dir = paths["vector_dir"]
+        self.index_file = self.vector_dir / "faiss.index"
+        self.metadata_file = self.vector_dir / "metadata.json"
 
         self.index = self._load_index()
         self.metadata = self._load_metadata()
-        logger.info(f"VectorStore initialized with {len(self.metadata)} chunks.")
+
+        logger.info(
+            "VectorStore initialized with %s chunks for user %s.",
+            len(self.metadata),
+            user_id,
+        )
 
     def _create_index(self):
         logger.info("Creating new FAISS index (dimention=384)")
@@ -132,7 +140,7 @@ class VectorStore:
             from datetime import datetime
             import shutil
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-            backup_dir = (VECTOR_DIR/"delete_backups"/ timestamp)
+            backup_dir = self.vector_dir / "delete_backups" / timestamp
             backup_dir.mkdir(parents=True, exist_ok=False)
 
             if self.index_file.exists():

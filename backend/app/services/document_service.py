@@ -5,18 +5,22 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 from fastapi import HTTPException
-from app.core.config import PROCESSED_DIR, UPLOAD_DIR, VECTOR_DIR
+from app.core.config import get_user_storage_paths
 from app.core.logger import logger
 from app.rag.vector_store import VectorStore
 
-def delete_processed_document(document_id: str):
+def delete_processed_document(document_id: str, user_id: str):
     # 1. Validate document ID.
     if not re.fullmatch(r"[A-Za-z0-9_-]+", document_id):
         raise HTTPException(
             status_code=400,
             detail="Invalid document ID.",
         )
-    processed_path = PROCESSED_DIR / f"{document_id}.json"
+    paths = get_user_storage_paths(user_id)
+    processed_dir = paths["processed_dir"]
+    upload_dir = paths["upload_dir"]
+    vector_dir = paths["vector_dir"]
+    processed_path = processed_dir / f"{document_id}.json"
     if not processed_path.is_file():
         raise HTTPException(
             status_code=404,
@@ -40,6 +44,12 @@ def delete_processed_document(document_id: str):
             detail="Document ID does not match its processed record.",
         )
 
+    if str(document.get("user_id")) != str(user_id):
+        raise HTTPException(
+            status_code=404,
+            detail="Processed document not found.",
+        )
+
     # 3. Find only the exact uploaded PDF associated with this record.
     stored_filename = document.get("filename")
     upload_path = None
@@ -51,7 +61,7 @@ def delete_processed_document(document_id: str):
                 detail="Unsafe stored filename; refusing to delete files.",
             )
 
-        candidate = UPLOAD_DIR / stored_filename
+        candidate = upload_dir / stored_filename
 
         if candidate.is_file() and candidate.suffix.lower() == ".pdf":
             upload_path = candidate
@@ -60,14 +70,14 @@ def delete_processed_document(document_id: str):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
 
     backup_dir = (
-        VECTOR_DIR
+        vector_dir
         / "document_delete_backups"
         / f"{document_id}_{timestamp}"
     )
     backup_dir.mkdir(parents=True, exist_ok=False)
 
-    index_path = VECTOR_DIR / "faiss.index"
-    metadata_path = VECTOR_DIR / "metadata.json"
+    index_path = vector_dir / "faiss.index"
+    metadata_path = vector_dir / "metadata.json"
 
     # IMPORTANT: Track whether vector deletion has started.
     vector_operation_started = False
@@ -83,7 +93,7 @@ def delete_processed_document(document_id: str):
 
         # 6. Verify that the vector backups exist and match file sizes.
         for original_name in ("faiss.index", "metadata.json"):
-            original = VECTOR_DIR / original_name
+            original = vector_dir / original_name
             backup = backup_dir / original_name
 
             if (
@@ -95,7 +105,7 @@ def delete_processed_document(document_id: str):
                 )
 
         # 7. Remove the document's vectors.
-        store = VectorStore()
+        store = VectorStore(user_id=user_id)
 
         # Set the flag immediately before attempting the operation.
         vector_operation_started = True
@@ -130,11 +140,11 @@ def delete_processed_document(document_id: str):
                 backup = backup_dir / filename
 
                 if backup.exists():
-                    temporary = VECTOR_DIR / f"{filename}.restore"
+                    temporary = vector_dir / f"{filename}.restore"
 
                     try:
                         shutil.copy2(backup, temporary)
-                        os.replace(temporary, VECTOR_DIR / filename)
+                        os.replace(temporary, vector_dir / filename)
                     except OSError:
                         logger.exception(
                             "Failed to restore vector file: %s",
