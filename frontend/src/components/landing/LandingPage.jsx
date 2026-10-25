@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 
+import previewUpload from '../../assets/screenshots/preview-uploadbase.png'
 import previewChat from '../../assets/screenshots/preview-chat.png'
-import previewUpload from '../../assets/screenshots/preview-upload.png'
 import previewHistory from '../../assets/screenshots/preview-history.png'
 import previewLoadMore from '../../assets/screenshots/preview-loadmore.png'
 
@@ -63,7 +63,7 @@ const TOUR = [
     ],
     image: previewUpload,
     alt: 'SchemeSetu upload screen with the Upload button highlighted',
-    hotspot: { x: 62, y: 62, w: 30, h: 14 },
+    hotspot: { x: 31, y: 58, w: 55, h: 40 },
     tag: 'Click Upload to add your PDF',
     tagPos: 'above',
     tagAlign: 'right',
@@ -81,7 +81,7 @@ const TOUR = [
     ],
     image: previewChat,
     alt: 'SchemeSetu chat box with a question being asked',
-    hotspot: { x: 4, y: 70, w: 92, h: 22 },
+    hotspot: { x: 31, y: 53, w: 55, h: 30 },
     tag: 'Type your question here',
     tagPos: 'above',
     tagAlign: 'left',
@@ -99,7 +99,7 @@ const TOUR = [
     ],
     image: previewHistory,
     alt: 'SchemeSetu history timeline with past questions',
-    hotspot: { x: 3, y: 6, w: 94, h: 60 },
+    hotspot: { x: 30.5, y: 10, w: 55, h: 58 },
     tag: 'Your past questions live here',
     tagPos: 'below',
     tagAlign: 'left',
@@ -117,7 +117,7 @@ const TOUR = [
     ],
     image: previewLoadMore,
     alt: 'SchemeSetu history with the Load more button highlighted',
-    hotspot: { x: 32, y: 82, w: 36, h: 12 },
+    hotspot: { x: 70.5, y: 12, w: 15, h: 12 },
     tag: 'Press Load more for older answers',
     tagPos: 'above',
     tagAlign: 'left',
